@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <mpi.h>
+#include <unistd.h>
 
 #include "util.h"
 #include "task.h"
