@@ -25,7 +25,7 @@ int count_games(string pgn_fn)
 	}
 	inf.close();
 
-	cout << "Fount " << game_cnt << " games!\n";
+	cout << "Found " << game_cnt << " games!\n";
 
 	return game_cnt;
 }
@@ -60,13 +60,17 @@ void split_pgn(string pgn_fn, int n_split, string dir_path, string sub_pgn_fn[])
 	cout << "Writing " << first_fn << endl;
 
 	inf.open(pgn_fn.c_str());
+	if (!inf.good()) {
+		cerr << "Something wrong with the pgn file: " << pgn_fn << endl;
+		exit(1);
+	}
+
 	stringstream cached_pgn("");
 	int game_index = 0;
 	int sub_index = 0;
 	while (!inf.eof()) {
 		token = "";
 		inf >> token;
-		//cached_pgn << token;
 		if (token == "[Event") {
 			game_index++;
 			if (game_index != 1) {
@@ -100,7 +104,7 @@ void split_pgn(string pgn_fn, int n_split, string dir_path, string sub_pgn_fn[])
 	subpgn_of.close();
 	inf.close();
 
-	cout << "Fount " << game_cnt << " games!\n";
+	cout << "Found " << game_cnt << " games!\n";
 }
 
 void merge_in_one_file(string sub_path, ofstream &tstream)

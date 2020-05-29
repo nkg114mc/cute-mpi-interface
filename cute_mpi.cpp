@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <assert.h>
+#include <sys/stat.h>
 
 #include "task.h"
 #include "util.h"
@@ -164,7 +165,9 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 	// mkdir
 	string tmpdir_path = make_rmd_dirname();
 	string mkdir_cmd = string("mkdir ") + tmpdir_path;
-	system(mkdir_cmd.c_str()); // make a tmp dir
+	cout << mkdir_cmd << endl;
+	mkdir(tmpdir_path.c_str(), 0777); // make a tmp dir
+	//system(mkdir_cmd.c_str()); // make a tmp dir
 
 
 	string opening_subpgn[1024];

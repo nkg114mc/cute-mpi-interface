@@ -150,9 +150,9 @@ int main(int argc, char* argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 	MPI_Get_processor_name(processor_name, &namelen);
 
-	char *start_cmd = "START";
-	char *useless_cmd = "ENDUP";
-	char *end_cmd = "FINISH";
+	string start_cmd = "START";
+	string useless_cmd = "ENDUP";
+	string end_cmd = "FINISH";
 	char recvbuff[256];
 
 	size = nprocs;
@@ -164,6 +164,8 @@ int main(int argc, char* argv[])
 	parse_arg(argc, argv, main_opt);
 	main_opt.rank =  myid;
 	main_opt.size =  nprocs;
+
+	cout << "Process[" << rank << "] launched!\n" << endl;
 
 	// prepare
 	if (rank == 0) {
@@ -177,7 +179,7 @@ int main(int argc, char* argv[])
 		success_split = split_task(main_opt, size, n_task, all_task);
 		if (success_split == false) {
 			for (j = 1; j < size; j++) {
-				ierr = MPI_Send(useless_cmd, 5, MPI_CHAR, j, 0, MPI_COMM_WORLD);
+				ierr = MPI_Send(useless_cmd.c_str(), 5, MPI_CHAR, j, 0, MPI_COMM_WORLD);
 			}
 			goto endup;
 		}
@@ -186,9 +188,9 @@ int main(int argc, char* argv[])
 		// all is ready, now begin!
 		for (j = 1; j < size; j++) {
 			if (j < n_task) {
-				ierr = MPI_Send(start_cmd, 5, MPI_CHAR, j, 0, MPI_COMM_WORLD);
+				ierr = MPI_Send(start_cmd.c_str(), 5, MPI_CHAR, j, 0, MPI_COMM_WORLD);
 			} else {
-				ierr = MPI_Send(useless_cmd, 5, MPI_CHAR, j, 0, MPI_COMM_WORLD);
+				ierr = MPI_Send(useless_cmd.c_str(), 5, MPI_CHAR, j, 0, MPI_COMM_WORLD);
 			}
 		}
 
@@ -319,7 +321,7 @@ int main(int argc, char* argv[])
 	} else {
 		// just exit
 		printf("Process %d of %d ready to send 'FINISH'!\n", rank, size);
-		ierr = MPI_Send(end_cmd, 6, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+		ierr = MPI_Send(end_cmd.c_str(), 6, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 		printf("Process %d of %d finish working, now exit!\n", rank, size);
 	}
 
