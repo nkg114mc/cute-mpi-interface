@@ -11,46 +11,44 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 struct opening_info_t {
-	string file;
-	string format;
-	string order;
-	string plies;
-	string start;
+	std::string file;
+	std::string format;
+	std::string order;
+	std::string plies;
+	std::string start;
 };
 
 struct option_t {
 	int rounds;
-	string tournament_type;
+	std::string tournament_type;
 	int n_engine;
-	string engine_info[1024];
-	string openning_info_str;
+	std::string engine_info[1024];
+	std::string openning_info_str;
 	opening_info_t open_info;
-	string other_option;
-	string pgnout;
+	std::string other_option;
+	std::string pgnout;
 
 	// mpi size and rank
 	int size;
 	int rank;
 
 	// path of cutechess-cli
-	string cute_exe_path;
+	std::string cute_exe_path;
 
 	// all subpgn
 	int n_sub_pgnout;
-	string sub_pgnout[1024];
+	std::string sub_pgnout[1024];
 };
 
 struct match_task_t {
 	int player1;
 	int player2;
 	int rounds;
-	string opening_info;
-	string pgnout_info;
-	string cmd;
-	//int type_flag;
+	std::string opening_info;
+	std::string pgnout_info;
+	std::string cmd;
 };
 
 struct player_pair_t {
@@ -60,8 +58,8 @@ struct player_pair_t {
 
 
 struct task_stack_t {
-	vector<match_task_t> stack;
-	string pgnout_path;
+	std::vector<match_task_t> stack;
+	std::string pgnout_path;
 };
 
 #endif /* TASK_H_ */

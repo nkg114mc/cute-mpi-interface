@@ -11,7 +11,7 @@
 
 using namespace std;
 
-#define SERIAL_TASK_BUFFER_SIZE 32768
+#define SERIAL_TASK_BUFFER_SIZE 65536
 
 
 void parse_arg(int argc, char* argv[], option_t &opt)
@@ -104,9 +104,6 @@ void parse_arg(int argc, char* argv[], option_t &opt)
 	for (i = 0; i < opt.n_engine; i++) {
 		cout << "engine_info[" << i << "] = " << opt.engine_info[i] << endl;
 	}
-	//cout << "" << endl;
-	//cout << "" << endl;
-	//cout << "" << endl;
 	cout << "other_option = " << opt.other_option << endl;
 	cout << "=========================" << endl;
 }
@@ -249,8 +246,6 @@ int main(int argc, char* argv[])
 			mytask.stack.push_back(recieve_task);
 			cout << "Process [" << rank << "] get cmd: " << recieve_task.cmd << endl;
 		}
-
-
 
 	}
 

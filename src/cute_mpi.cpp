@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <cstdio>
 #include <cstdlib>
 #include <assert.h>
@@ -10,15 +11,12 @@
 #include "util.h"
 #include "open_split.h"
 
-using namespace std;
 
-
-
-string parse_opening_fn(string open_info_str, opening_info_t &open_info)
+std::string parse_opening_fn(std::string open_info_str, opening_info_t &open_info)
 {
-	stringstream ss("");
-	string token = "";
-	string words[256];
+	std::stringstream ss("");
+	std::string token = "";
+	std::string words[256];
 	int n_word, j;
 	bool bb = false;
 
@@ -48,7 +46,7 @@ string parse_opening_fn(string open_info_str, opening_info_t &open_info)
 
 	// find the file path
 	int i;
-	string fpath = "";
+	std::string fpath = "";
 	for (i = 0; i < n_word; i++) {
 		if (words[i] == "file") {
 			fpath = words[i + 1];
@@ -67,9 +65,9 @@ string parse_opening_fn(string open_info_str, opening_info_t &open_info)
 	return fpath;
 }
 
-string build_task_cmd(option_t &opt, match_task_t &task)
+std::string build_task_cmd(option_t &opt, match_task_t &task)
 {
-	stringstream allcmd("");
+	std::stringstream allcmd("");
 
 	// cutechess-cli exec
 	allcmd << opt.cute_exe_path << " ";
@@ -117,7 +115,7 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 	player_pair_t *possible_pairs;
 
 	if (n_engine < 2) {
-		cerr << "Error: at least two engine!" << endl;
+		std::cerr << "Error: at least two engine!" << std::endl;
 		return 0;
 	}
 
@@ -143,11 +141,11 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 			pair_idx++;
 		}
 	} else {
-		cerr << "Error: unknown tournament type!: [" << opt.tournament_type << "]" << endl;
+		std::cerr << "Error: unknown tournament type!: [" << opt.tournament_type << "]" << std::endl;
 	}
 
 	for (i = 0; i < n_pairs; i++) {
-		cout << "pair " << possible_pairs[i].player1 << "-" << possible_pairs[i].player2 << endl;
+		std::cout << "pair " << possible_pairs[i].player1 << "-" << possible_pairs[i].player2 << std::endl;
 	}
 
 	// rounds
@@ -155,27 +153,26 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 
 	// total_games
 	int total_games = n_round * n_pairs;
-	cout << "Get " << total_games << " in total for this tournament!" << endl;
+	std::cout << "Get " << total_games << " in total for this tournament!" << std::endl;
 
 	assert(n_process > 0);
 	if (n_round < n_process) {
-		cerr << "Too less rounds, do not need to run parallely at all!\n";
+		std::cerr << "Too less rounds, do not need to run parallely at all!\n";
 	}
 
 	// mkdir
-	string tmpdir_path = make_rmd_dirname();
-	string mkdir_cmd = string("mkdir ") + tmpdir_path;
-	cout << mkdir_cmd << endl;
+	std::string tmpdir_path = make_rmd_dirname();
+	std::string mkdir_cmd = std::string("mkdir ") + tmpdir_path;
+	std::cout << mkdir_cmd << std::endl;
 	mkdir(tmpdir_path.c_str(), 0777); // make a tmp dir
-	//system(mkdir_cmd.c_str()); // make a tmp dir
 
 
-	string opening_subpgn[1024];
+	std::vector<std::string> opening_subpgn;
 	// Begin to distribute works =====================
 	int n_round_per_proce = n_round / n_process;
 
 	// split opening pgn into n_proc parts
-	string pgn_fn = parse_opening_fn(opt.openning_info_str, opt.open_info);
+	std::string pgn_fn = parse_opening_fn(opt.openning_info_str, opt.open_info);
 	split_pgn(pgn_fn, n_process, tmpdir_path, opening_subpgn);
 
 	// assign task for each process
@@ -199,19 +196,19 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 			task.player2 = possible_pairs[pair_idx].player2;
 			task.rounds = rounds_for_curr_proc;
 			task.opening_info = opening_subpgn[j];
-			task.pgnout_info = tmpdir_path + string("/subresult-") + int2str(j) + string(".pgn");
+			task.pgnout_info = tmpdir_path + std::string("/subresult-") + int2str(j) + std::string(".pgn");
 			task.cmd = build_task_cmd(opt, task);
 			// insert
 			all_task[j].stack.push_back(task);
 			all_task[j].pgnout_path = task.pgnout_info;
 		}
 		// ===========
-		cout << "Task for process[" << j << "] =====\n";
+		std::cout << "Task for process[" << j << "] =====\n";
 		//print_task_stack();
 		for (int k = 0; k < all_task[j].stack.size(); k++) {
-			cout << "Task " << k << ": " << all_task[j].stack[k].cmd << endl;
+			std::cout << "Task " << k << ": " << all_task[j].stack[k].cmd << std::endl;
 		}
-		cout << "===================================\n";
+		std::cout << "===================================\n";
 	}
 
 	// record all pgn output into option (for post-process)
@@ -228,12 +225,12 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 void run_task(option_t &opt, task_stack_t &alltask)
 {
 	int i;
-	string cmd = "";
+	std::string cmd = "";
 
 	// begin to run
 	for (i = 0; i < alltask.stack.size(); i++) {
 		cmd = alltask.stack[i].cmd;
-		cout << "Process [" << opt.rank << "] is runing cmd: " << cmd << endl;
+		std::cout << "Process [" << opt.rank << "] is runing cmd: " << cmd << std::endl;
 		system(cmd.c_str());
 	}
 }

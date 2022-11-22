@@ -11,36 +11,34 @@
 #include <cstdlib>
 
 
-using namespace std;
-
-int str2int(string str)
+int str2int(std::string str)
 {
     int n = 0;
-    stringstream ss("");
+    std::stringstream ss("");
     ss << str;
     ss >> n;
     return n;
 }
 
-string int2str(int n)
+std::string int2str(int n)
 {
-    string str;
-    stringstream ss("");
+    std::string str;
+    std::stringstream ss("");
     ss << n;
     ss >> str;
     return str;
 }
 
-double str2double(string str)
+double str2double(std::string str)
 {
     double n;
-    stringstream ss("");
+    std::stringstream ss("");
     ss << str;
     ss >> n;
     return n;
 }
 
-bool valid_path(string fpath)
+bool valid_path(std::string fpath)
 {
     FILE *fp;
     fp = fopen(fpath.c_str(), "r");
@@ -50,10 +48,10 @@ bool valid_path(string fpath)
     return false;
 }
 
-string make_rmd_dirname()
+std::string make_rmd_dirname()
 {
 	int i, part[4];
-	string rmdname = "", rndnum;
+	std::string rmdname = "", rndnum;
 
 	srand((unsigned)time(0));
 
@@ -65,5 +63,3 @@ string make_rmd_dirname()
 	rmdname = "tmpdir-" + rndnum;
 	return rmdname;
 }
-
-
