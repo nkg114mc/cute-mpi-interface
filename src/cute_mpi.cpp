@@ -94,9 +94,9 @@ std::string build_task_cmd(option_t &opt, match_task_t &task)
 
 	// engin infos
 	//   player1
-	allcmd << "-engine " << opt.engine_info[task.player1] << " ";
+	allcmd << "-engine " << opt.engine_infos[task.player1] << " ";
 	//   player2
-	allcmd << "-engine " << opt.engine_info[task.player2] << " ";
+	allcmd << "-engine " << opt.engine_infos[task.player2] << " ";
 
 	return allcmd.str();
 }
@@ -109,11 +109,11 @@ void parse_engine_info()
 int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[])
 {
 	int i, j;
-	int n_engine = opt.n_engine;
 	int n_pairs = 0;
 	int n_round = 0;
-	player_pair_t *possible_pairs;
+	std::vector<player_pair_t> possible_pairs;
 
+	const int n_engine = opt.get_n_engine();
 	if (n_engine < 2) {
 		std::cerr << "Error: at least two engine!" << std::endl;
 		return 0;
@@ -122,23 +122,21 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 	// tournament type?
 	if (opt.tournament_type == "round-robin") {
 		n_pairs = (n_engine * (n_engine - 1)) / 2;
-		possible_pairs = new player_pair_t[n_pairs];
-		int pair_idx = 0;
 		for (i = 0; i < (n_engine - 1); i++) {
 			for (j = (i+1); j < n_engine; j++) {
-				possible_pairs[pair_idx].player1 = i;
-				possible_pairs[pair_idx].player2 = j;
-				pair_idx++;
+				player_pair_t new_pair;
+				new_pair.player1 = i;
+				new_pair.player2 = j;
+				possible_pairs.push_back(new_pair);
 			}
 		}
 	} else if (opt.tournament_type == "gauntlet") {
 		n_pairs = (n_engine - 1);
-		possible_pairs = new player_pair_t[n_pairs];
-		int pair_idx = 0;
 		for (i = 1; i < (n_engine); i++) {
-			possible_pairs[pair_idx].player1 = 0;
-			possible_pairs[pair_idx].player2 = i;
-			pair_idx++;
+			player_pair_t new_pair;
+			new_pair.player1 = 0;
+			new_pair.player2 = i;
+			possible_pairs.push_back(new_pair);
 		}
 	} else {
 		std::cerr << "Error: unknown tournament type!: [" << opt.tournament_type << "]" << std::endl;
@@ -153,7 +151,7 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 
 	// total_games
 	int total_games = n_round * n_pairs;
-	std::cout << "Get " << total_games << " in total for this tournament!" << std::endl;
+	std::cout << "Get " << total_games << " games in total for this tournament!" << std::endl;
 
 	assert(n_process > 0);
 	if (n_round < n_process) {
@@ -167,13 +165,14 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 	mkdir(tmpdir_path.c_str(), 0777); // make a tmp dir
 
 
-	std::vector<std::string> opening_subpgn;
 	// Begin to distribute works =====================
-	int n_round_per_proce = n_round / n_process;
 
 	// split opening pgn into n_proc parts
+	std::vector<std::string> opening_subpgn;
 	std::string pgn_fn = parse_opening_fn(opt.openning_info_str, opt.open_info);
 	split_pgn(pgn_fn, n_process, tmpdir_path, opening_subpgn);
+
+	int n_round_per_proce = n_round / n_process;
 
 	// assign task for each process
 	int remain_rounds = n_round;
@@ -212,9 +211,8 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 	}
 
 	// record all pgn output into option (for post-process)
-	opt.n_sub_pgnout = n_process;
 	for (i = 0; i < n_process; i++) {
-		opt.sub_pgnout[i] = all_task[i].pgnout_path;
+		opt.sub_pgnout.push_back(all_task[i].pgnout_path);
 	}
 
 	// End ===========================================
@@ -222,7 +220,7 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 	return n_task;
 }
 
-void run_task(option_t &opt, task_stack_t &alltask)
+void run_task(int worker_rank, task_stack_t &alltask)
 {
 	int i;
 	std::string cmd = "";
@@ -230,7 +228,7 @@ void run_task(option_t &opt, task_stack_t &alltask)
 	// begin to run
 	for (i = 0; i < alltask.stack.size(); i++) {
 		cmd = alltask.stack[i].cmd;
-		std::cout << "Process [" << opt.rank << "] is runing cmd: " << cmd << std::endl;
+		std::cout << "Process [" << worker_rank << "] is runing cmd: " << cmd << std::endl;
 		system(cmd.c_str());
 	}
 }

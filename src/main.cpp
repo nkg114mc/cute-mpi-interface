@@ -20,10 +20,7 @@ void parse_arg(int argc, char* argv[], option_t &opt)
 	string token;
 	string val;
 	string other_option = "";
-	int engine_cnt;
 
-
-	engine_cnt = 0;
 	other_option = "";
 	for (i = 0; i < argc; i++) {
 		token = string(argv[i]);
@@ -34,10 +31,6 @@ void parse_arg(int argc, char* argv[], option_t &opt)
 				val = string(argv[i + 1]);
 				opt.tournament_type = val;
 				cout << "Parsing tournament type: " << val << endl;
-
-			} else if (token == "-enginenum") {
-				val = string(argv[i + 1]);
-				opt.n_engine = str2int(val);
 
 			} else if (token == "-pgnout") {
 				val = string(argv[i + 1]);
@@ -53,9 +46,7 @@ void parse_arg(int argc, char* argv[], option_t &opt)
 						break;
 					}
 				}
-				opt.engine_info[engine_cnt] = mul_val;
-				engine_cnt++;
-				opt.n_engine = engine_cnt;
+				opt.engine_infos.push_back(mul_val);
 
 			} else if (token == "-rounds") {
 				val = string(argv[i + 1]);
@@ -100,9 +91,9 @@ void parse_arg(int argc, char* argv[], option_t &opt)
 	cout << "openning_info_str = " << opt.openning_info_str << endl;
 	cout << "pgnout = " << opt.pgnout << endl;
 	cout << "rounds = " << opt.rounds << endl;
-	cout << "n_engine = " << opt.n_engine << endl;
-	for (i = 0; i < opt.n_engine; i++) {
-		cout << "engine_info[" << i << "] = " << opt.engine_info[i] << endl;
+	cout << "n_engine = " << opt.get_n_engine() << endl;
+	for (i = 0; i < opt.get_n_engine(); i++) {
+		cout << "engine_info[" << i << "] = " << opt.engine_infos[i] << endl;
 	}
 	cout << "other_option = " << opt.other_option << endl;
 	cout << "=========================" << endl;
@@ -110,71 +101,63 @@ void parse_arg(int argc, char* argv[], option_t &opt)
 
 void clear_arg(option_t &opt)
 {
-	int i;
 	opt.rounds = 0;
 	opt.tournament_type = "";
-	opt.n_engine = 0;
-	for (i = 0; i < 1024; i++) {
-		opt.engine_info[i] = "";
-	}
+	opt.engine_infos.clear();
 	opt.openning_info_str = "";
 	opt.other_option = "";
 	opt.pgnout = "";
-	opt.size = 0;
-	opt.rank = 0;
 
-	opt.cute_exe_path = "cutechess-cli";
+	opt.cute_exe_path = "cutechess-cli"; // default cutechess-cli exe file name
 
 	// all subpgn
-	opt.n_sub_pgnout = 0;
-	for (i = 0; i < 1024; i++) {
-		opt.sub_pgnout[i] = "";
-	}
+	opt.sub_pgnout.clear();
 }
 
 int main(int argc, char* argv[])
 {
 	option_t main_opt;
-	task_stack_t all_task[1024];
+	task_stack_t all_task[MAX_WORKERS_N];
 	task_stack_t mytask;
 	int myid, nprocs, namelen, master, size, rank;
 	int ierr, i, j, n_task;
 	char processor_name[1024];
 	MPI_Status status;
 
-	MPI_Init(&argc,&argv);
+	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 	MPI_Get_processor_name(processor_name, &namelen);
 
-	string start_cmd = "START";
-	string useless_cmd = "ENDUP";
-	string end_cmd = "FINISH";
+	const int MASTER_RANK = 0;
+	const string start_cmd = "START";
+	const string useless_cmd = "ENDUP";
+	const string end_cmd = "FINISH";
 	char recvbuff[256];
 
 	size = nprocs;
 	rank = myid;
-	master = 0;
 
-	// parsing argument
+	// clear argument
 	clear_arg(main_opt);
-	parse_arg(argc, argv, main_opt);
-	main_opt.rank =  myid;
-	main_opt.size =  nprocs;
 
-	cout << "Process[" << rank << "] launched!\n" << endl;
+	cout << "Process[" << rank << "] launched!" << endl;
+	usleep(100000);
 
 	// prepare
-	if (rank == 0) {
+	if (rank == MASTER_RANK) {
 		bool success_split = false;
 		n_task = 0;
 
 		cout << "Master process start preprocessing!\n" << endl;
 		// Preprocess =======================================
 
+		// 1) parse arguments in option_t
+		parse_arg(argc, argv, main_opt);
+
 		// 2) split the big task into small ones
 		success_split = split_task(main_opt, size, n_task, all_task);
-		if (success_split == false) {
+		if (!success_split) {
 			for (j = 1; j < size; j++) {
 				ierr = MPI_Send(useless_cmd.c_str(), 5, MPI_CHAR, j, 0, MPI_COMM_WORLD);
 			}
@@ -251,16 +234,14 @@ int main(int argc, char* argv[])
 
 	// ========================
 	cout << "Process [" << rank << "] start working!" << endl;
-	//string all_subpgn[256];
-	//split_pgn("8moves_GM.pgn", 2, "./splitopen", all_subpgn);
 
-	run_task(main_opt, mytask);
+	run_task(rank, mytask);
 
 	cout << "Process [" << rank << "] finish working!" << endl;
 	// ========================
 
 	// post process
-	if (rank == 0) {
+	if (rank == MASTER_RANK) {
 		int finish[512];
 		int n_task = size, i;
 
@@ -287,7 +268,6 @@ int main(int argc, char* argv[])
 					cout << "Get FINISH message from process [" << msg_source << "]!" << endl;
 					finish[msg_source] = 1;
 				}
-				//}
 				bool all_finsh = true;
 				for (i = 1; i < n_task; i++) {
 					if (finish[i] == 0) {
@@ -305,7 +285,7 @@ int main(int argc, char* argv[])
 		// all child process finished working
 		// POSRPROCESS =================================================
 		// 4) merge all result files
-		file_merge(main_opt.pgnout, main_opt.sub_pgnout, main_opt.n_sub_pgnout);
+		file_merge(main_opt.pgnout, main_opt.sub_pgnout);
 
 		// 5) delete all tmp dirs and files
 		//system("");

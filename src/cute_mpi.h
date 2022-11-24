@@ -10,8 +10,10 @@
 
 #include "task.h"
 
+#define MAX_WORKERS_N 1024
+
 int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[]);
-void run_task(option_t &opt, task_stack_t &alltask);
+void run_task(int worker_rank, task_stack_t &alltask);
 
 // serialize a task to be ready for mpi sending
 int serialize_task_stack(match_task_t &task, unsigned char serial_buffer[]);

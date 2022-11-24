@@ -23,23 +23,21 @@ struct opening_info_t {
 struct option_t {
 	int rounds;
 	std::string tournament_type;
-	int n_engine;
-	std::string engine_info[1024];
+	std::vector<std::string> engine_infos;
 	std::string openning_info_str;
 	opening_info_t open_info;
 	std::string other_option;
 	std::string pgnout;
 
-	// mpi size and rank
-	int size;
-	int rank;
-
 	// path of cutechess-cli
 	std::string cute_exe_path;
 
 	// all subpgn
-	int n_sub_pgnout;
-	std::string sub_pgnout[1024];
+	std::vector<std::string> sub_pgnout;
+
+	inline int get_n_engine() {
+		return engine_infos.size();
+	}
 };
 
 struct match_task_t {
