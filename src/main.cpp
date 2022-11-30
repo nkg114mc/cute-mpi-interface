@@ -63,8 +63,10 @@ void parse_arg(int argc, char* argv[], option_t &opt)
 					}
 				}
 				opt.openning_info_str = mul_val;
-			} else if (token == "-initfile") {
+			//} else if (token == "-initfile") {
 
+			} else if (token == "-shuffleopening") {
+				opt.shuffle_opening = true;
 
 			} else if (token == "-cuteexec") {
 				opt.cute_exe_path = string(argv[i + 1]);
@@ -107,6 +109,7 @@ void clear_arg(option_t &opt)
 	opt.openning_info_str = "";
 	opt.other_option = "";
 	opt.pgnout = "";
+	opt.shuffle_opening = false;
 
 	opt.cute_exe_path = "cutechess-cli"; // default cutechess-cli exe file name
 

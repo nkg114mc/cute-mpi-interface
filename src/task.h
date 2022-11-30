@@ -28,6 +28,7 @@ struct option_t {
 	opening_info_t open_info;
 	std::string other_option;
 	std::string pgnout;
+	bool shuffle_opening;
 
 	// path of cutechess-cli
 	std::string cute_exe_path;

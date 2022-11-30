@@ -124,6 +124,7 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 		n_pairs = (n_engine * (n_engine - 1)) / 2;
 		for (i = 0; i < (n_engine - 1); i++) {
 			for (j = (i+1); j < n_engine; j++) {
+				assert(i < j);
 				player_pair_t new_pair;
 				new_pair.player1 = i;
 				new_pair.player2 = j;
@@ -170,7 +171,7 @@ int split_task(option_t &opt, int n_process, int &n_task, task_stack_t all_task[
 	// split opening pgn into n_proc parts
 	std::vector<std::string> opening_subpgn;
 	std::string pgn_fn = parse_opening_fn(opt.openning_info_str, opt.open_info);
-	split_pgn(pgn_fn, n_process, tmpdir_path, opening_subpgn);
+	split_pgn(pgn_fn, n_process, opt.shuffle_opening, tmpdir_path, opening_subpgn);
 
 	int n_round_per_proce = n_round / n_process;
 
